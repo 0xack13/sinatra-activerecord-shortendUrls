@@ -1,5 +1,6 @@
 require 'sinatra'
 require 'sinatra/activerecord'
+require 'alphadecimal'
 
 set :database, {adapter: "sqlite3", database: "foo.sqlite3"}
 
@@ -8,6 +9,14 @@ class ShortenedUrl < ActiveRecord::Base
 	validates_uniqueness_of :url
 	validates_presence_of :url
   	validates_format_of :url, :with => /^\b((?:https?:\/\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))$/, :multiline => true
+
+  	def shorten
+  		self.id.alphadecimal
+  	end
+
+  	def self.find_by_shortened(shortened)
+  		find(shortened.alphadecimal)
+  	end
 end
 
 get '/' do
@@ -24,6 +33,7 @@ post '/' do
 end
 
 get '/:shortened' do
-	short_url = ShortenedUrl.find(params[:shortened])
+	#short_url = ShortenedUrl.find(params[:shortened])
+	short_url = ShortenedUrl.find_by_shortened(params[:shortened])
 	redirect short_url.url
 end
